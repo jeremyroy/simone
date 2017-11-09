@@ -11,61 +11,57 @@ import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.topic.Publisher;
 
-import geometry_msgs.Quaternion;
-import geometry_msgs.Vector3;
 import std_msgs.Header;
+import sensor_msgs.Imu;
 import org.ros.message.Time;
 
 public class PhoneImu extends AbstractNodeMain implements SensorEventListener
 {
+    private final SensorManager mSensorManager;
+    private final Sensor mAccSensor;
+    private final Sensor mGyroSensor;
+    private final Sensor mQuatSensor;
+
+    private int mSensorPeriodUs;
+
     private String topic_name;
-    private Quaternion orientation;
-    private Vector3 angular_velocity;
-    private Vector3 linear_accerelation;
+    private double[] mOrientation;
+    private double[] mAngularVelocity;
+    private double[] mLinearAcceleration;
 
-    private double[] cov_orientation;
-    private double[] cov_angular_velocity;
-    private double[] cov_linear_accerelation;
+    private double[] mCovOrientation;
+    private double[] mCovAngularVelocity;
+    private double[] mCovLinearAcceleration;
 
-    public PhoneImu() {
-        this.topic_name = "phone_imu";
-        setOrientation(0,0,0,0);
-        setAngluarVelocity(0,0,0);
-        setLinearAcceleration(0,0,0);
-
-        cov_orientation = new double[9]; // Automatically instantiated to zero
-        cov_angular_velocity = new double[9];
-        cov_linear_accerelation = new double[9];
+    public PhoneImu(SensorManager sensorManager) {
+        this(sensorManager, "phone_imu", 50000);
     }
 
-    public PhoneImu(String topic) {
+    public PhoneImu(SensorManager sensorManager, String topic)
+    {
+        this(sensorManager, topic, 50000);
+    }
+
+    public PhoneImu(SensorManager sensorManager, String topic, int sensor_period_us) {
+        // Set up topic
         this.topic_name = topic;
-        setOrientation(0,0,0,0);
-        setAngluarVelocity(0,0,0);
-        setLinearAcceleration(0,0,0);
 
-        cov_orientation = new double[9];
-        cov_angular_velocity = new double[9];
-        cov_linear_accerelation = new double[9];
-    }
+        // Initialize the sampling period
+        mSensorPeriodUs = sensor_period_us; // Default 20 Hz
 
-    private void setOrientation(double x, double y, double z, double w) {
-        this.orientation.setX(x);
-        this.orientation.setY(y);
-        this.orientation.setZ(z);
-        this.orientation.setW(w);
-    }
+        // Set up sensors
+        mSensorManager = sensorManager;
+        mQuatSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        mGyroSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        mAccSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-    private void setAngluarVelocity(double x, double y, double z) {
-        this.angular_velocity.setX(x);
-        this.angular_velocity.setY(y);
-        this.angular_velocity.setZ(z);
-    }
+        mOrientation = new double[4];
+        mAngularVelocity = new double[3];
+        mLinearAcceleration = new double[3];
 
-    private void setLinearAcceleration(double x, double y, double z) {
-        this.linear_accerelation.setX(x);
-        this.linear_accerelation.setY(y);
-        this.linear_accerelation.setZ(z);
+        mCovOrientation = new double[9]; // Automatically instantiated to zero
+        mCovAngularVelocity = new double[9];
+        mCovLinearAcceleration = new double[9];
     }
 
     @Override
@@ -74,7 +70,13 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
     }
 
     public void onStart(ConnectedNode connectedNode) {
-        final Publisher publisher = connectedNode.newPublisher(this.topic_name, "sensor_msgs/Imu");
+        final Publisher<sensor_msgs.Imu> publisher = connectedNode.newPublisher(this.topic_name, "sensor_msgs/Imu");
+
+        mSensorManager.registerListener(this, mQuatSensor, mSensorPeriodUs);
+        mSensorManager.registerListener(this, mGyroSensor, mSensorPeriodUs);
+        mSensorManager.registerListener(this, mAccSensor, mSensorPeriodUs);
+
+        // Start sensor loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             private int sequenceNumber;
 
@@ -83,29 +85,36 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
             }
 
             protected void loop() throws InterruptedException {
-                sensor_msgs.Imu data = (sensor_msgs.Imu)publisher.newMessage();
-                Header new_header = (std_msgs.Header)publisher.newMessage();
+                sensor_msgs.Imu data = publisher.newMessage();
                 Time current_time = new Time();
 
                 current_time.secs = (int) System.currentTimeMillis() / 1000;
                 current_time.nsecs = (int) (System.currentTimeMillis() % 1000) * 1000;
 
-                new_header.setSeq(sequenceNumber);
-                new_header.setStamp(current_time);
-                new_header.setFrameId("phone");
+                data.getHeader().setSeq(sequenceNumber);
+                data.getHeader().setStamp(current_time);
+                data.getHeader().setFrameId("phone");
 
-                data.setHeader(new_header);
-                data.setOrientation(orientation);
-                data.setAngularVelocity(angular_velocity);
-                data.setLinearAcceleration(linear_accerelation);
+                data.getOrientation().setW(mOrientation[3]);
+                data.getOrientation().setX(mOrientation[0]);
+                data.getOrientation().setY(mOrientation[1]);
+                data.getOrientation().setZ(mOrientation[2]);
 
-                data.setOrientationCovariance(cov_orientation);
-                data.setAngularVelocityCovariance(cov_angular_velocity);
-                data.setLinearAccelerationCovariance(cov_linear_accerelation);
+                data.getAngularVelocity().setX(mAngularVelocity[0]);
+                data.getAngularVelocity().setY(mAngularVelocity[1]);
+                data.getAngularVelocity().setZ(mAngularVelocity[2]);
+
+                data.getLinearAcceleration().setX(mLinearAcceleration[0]);
+                data.getLinearAcceleration().setY(mLinearAcceleration[1]);
+                data.getLinearAcceleration().setZ(mLinearAcceleration[2]);
+
+                data.setOrientationCovariance(mCovOrientation);
+                data.setAngularVelocityCovariance(mCovAngularVelocity);
+                data.setLinearAccelerationCovariance(mCovLinearAcceleration);
 
                 publisher.publish(data);
                 ++this.sequenceNumber;
-                Thread.sleep(1000L);
+                Thread.sleep(mSensorPeriodUs / 1000);
             }
         });
     }
@@ -123,7 +132,7 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE)
         {
             float[] ang_vel = event.values;
-            this.setAngluarVelocity(ang_vel[0], ang_vel[1], ang_vel[2]);
+            this.setAngularVelocity(ang_vel[0], ang_vel[1], ang_vel[2]);
         }
         else if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
         {
@@ -134,6 +143,25 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
+        // Do nothing (for now)
+    }
 
+    private void setOrientation(double x, double y, double z, double w) {
+        this.mOrientation[0] = x;
+        this.mOrientation[1] = y;
+        this.mOrientation[2] = z;
+        this.mOrientation[3] = w;
+    }
+
+    private void setAngularVelocity(double x, double y, double z) {
+        this.mAngularVelocity[0] = x;
+        this.mAngularVelocity[1] = y;
+        this.mAngularVelocity[2] = z;
+    }
+
+    private void setLinearAcceleration(double x, double y, double z) {
+        this.mLinearAcceleration[0] = x;
+        this.mLinearAcceleration[1] = y;
+        this.mLinearAcceleration[2] = z;
     }
 }

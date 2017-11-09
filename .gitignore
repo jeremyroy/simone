@@ -8,3 +8,4 @@ build/
 /captures
 .externalNativeBuild
 buildscript_java.gradle
+*.swp
