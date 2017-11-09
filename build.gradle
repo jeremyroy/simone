@@ -19,8 +19,22 @@ task wrapper(type: Wrapper) {
 }
 
 buildscript {
-    apply from: "https://github.com/rosjava/android_core/raw/kinetic/buildscript.gradle"
+  def f = new File("buildscript_java.gradle") 
+  try{ 
+    new URL("https://github.com/rosjava/rosjava_bootstrap/raw/kinetic/buildscript.gradle").withInputStream{ i -> f.withOutputStream{ it << i }}    
+  } catch (all) { 
+    //do nothing, keep cached script 
+  }  
+  apply from: "buildscript_java.gradle"  
+  dependencies {
+    classpath "com.android.tools.build:gradle:2.2.3"
+  }
 }
+
+// Previously, above statement was the following:
+//buildscript {
+//    apply from: "https://github.com/rosjava/android_core/raw/kinetic/buildscript.gradle"
+//}
 
 apply plugin: 'catkin'
 
