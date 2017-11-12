@@ -88,8 +88,10 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
                 sensor_msgs.Imu data = publisher.newMessage();
                 Time current_time = new Time();
 
-                current_time.secs = (int) System.currentTimeMillis() / 1000;
-                current_time.nsecs = (int) (System.currentTimeMillis() % 1000) * 1000;
+                long time = System.currentTimeMillis();
+
+                current_time.secs = (int) (time / 1000);
+                current_time.nsecs = (int) ((time % 1000) * 1000000);
 
                 data.getHeader().setSeq(sequenceNumber);
                 data.getHeader().setStamp(current_time);
