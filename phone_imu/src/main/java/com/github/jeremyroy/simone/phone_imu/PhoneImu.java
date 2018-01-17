@@ -125,11 +125,22 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
         {
-            float[] quat = new float[4];
+            //float[] quat = new float[4];
 
-            SensorManager.getQuaternionFromVector(quat, event.values);
+            float[] rotation_matrix = new float[9];
+            float[] orientation = new float[3];
 
-            this.setOrientation(quat[0], quat[1], quat[2], quat[3]);
+            SensorManager.getRotationMatrixFromVector(rotation_matrix, event.values);
+            SensorManager.getOrientation(rotation_matrix, orientation);
+            
+            this.mOrientation[0] = orientation[0];
+            this.mOrientation[1] = orientation[1];
+            this.mOrientation[2] = orientation[2];
+            this.mOrientation[3] = 0;
+            
+            //SensorManager.getQuaternionFromVector(quat, event.values);
+
+            //this.setOrientation(quat[0], quat[1], quat[2], quat[3]);
         }
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE)
         {
