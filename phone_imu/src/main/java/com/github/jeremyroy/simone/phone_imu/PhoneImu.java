@@ -34,12 +34,12 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
     private double[] mCovLinearAcceleration;
 
     public PhoneImu(SensorManager sensorManager) {
-        this(sensorManager, "phone_imu", 50000);
+        this(sensorManager, "phone_imu", 20000);
     }
 
     public PhoneImu(SensorManager sensorManager, String topic)
     {
-        this(sensorManager, topic, 50000);
+        this(sensorManager, topic, 20000);
     }
 
     public PhoneImu(SensorManager sensorManager, String topic, int sensor_period_us) {
@@ -47,7 +47,7 @@ public class PhoneImu extends AbstractNodeMain implements SensorEventListener
         this.topic_name = topic;
 
         // Initialize the sampling period
-        mSensorPeriodUs = sensor_period_us; // Default 20 Hz
+        mSensorPeriodUs = sensor_period_us; // Default 50 Hz
 
         // Set up sensors
         mSensorManager = sensorManager;
