@@ -44,15 +44,16 @@ dependencies {
 
 dependencies {
     compile 'org.ros.android_core:android_10:[0.2,0.3)'
+    compile 'org.ros.rosjava_messages:simone_msgs:0.0.+'
 }
 
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 10
+  compileSdkVersion 18
   defaultConfig {
-    minSdkVersion 10
-    targetSdkVersion 10
+    minSdkVersion 17
+    targetSdkVersion 18
     versionCode 1
     versionName "1.0"
   }
