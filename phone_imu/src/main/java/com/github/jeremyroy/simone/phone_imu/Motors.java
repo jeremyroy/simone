@@ -24,11 +24,18 @@ public class Motors {
     private int lower_bound = 5;
     private int resolution = 2; //Number of decimal places to keep for duty cycle, which is stored as a percent
 
+    private boolean enabled;
+
     public Motors(int sampleRate) {
         this.sampleRate = sampleRate;
         audio = new Audio();
-        audio.start();
 
+        setMotorDuty(MOTOR_1, 0);
+        setMotorDuty(MOTOR_2, 0);
+        setMotorDuty(MOTOR_3, 0);
+        setMotorDuty(MOTOR_4, 0);
+
+        enabled = false;
     }
 
     public void initializeESCs() {
@@ -61,10 +68,22 @@ public class Motors {
 
     public void pause_motors() {
         audio.stop();
+
+        setMotorDuty(MOTOR_1, 0);
+        setMotorDuty(MOTOR_2, 0);
+        setMotorDuty(MOTOR_3, 0);
+        setMotorDuty(MOTOR_4, 0);
+
+        enabled = false;
     }
 
     public void resume_motors() {
         audio.start();
+        enabled = true;
+    }
+
+    public boolean is_enabled(){
+        return enabled;
     }
 
     protected class Audio implements Runnable {

@@ -43,6 +43,7 @@
   <build_depend>rosjava_core</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>simone_msgs</build_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

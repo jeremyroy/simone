@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
+import org.ros.node.Node;
 import org.ros.message.MessageListener;
 import org.ros.node.topic.Subscriber;
 
@@ -46,13 +47,28 @@ public class MotorNode extends AbstractNodeMain
         Subscriber<simone_msgs.MotorCTRL> subscriber = connectedNode.newSubscriber("motor_node", simone_msgs.MotorCTRL._TYPE);
         subscriber.addMessageListener(new MessageListener<simone_msgs.MotorCTRL>() {
             @Override
-            public void onNewMessage(simone_msgs.MotorCTRL message) {
-                m_motors.setMotorDuty(Motors.MOTOR_1, message.getM1());
-                m_motors.setMotorDuty(Motors.MOTOR_2, message.getM2());
-                m_motors.setMotorDuty(Motors.MOTOR_3, message.getM3());
-                m_motors.setMotorDuty(Motors.MOTOR_4, message.getM4());
+            public void onNewMessage(simone_msgs.MotorCTRL message){
+                if (message.getEnableMotors()) {
+                    if (!m_motors.is_enabled())
+                    {
+                        m_motors.resume_motors();
+                    }
+                    m_motors.setMotorDuty(Motors.MOTOR_1, message.getM1());
+                    m_motors.setMotorDuty(Motors.MOTOR_2, message.getM2());
+                    m_motors.setMotorDuty(Motors.MOTOR_3, message.getM3());
+                    m_motors.setMotorDuty(Motors.MOTOR_4, message.getM4());
+                }
+                else if (m_motors.is_enabled())                {
+                    m_motors.pause_motors();
+                }
             }
         });
+    }
+
+    @Override
+    public void onShutdown(Node node)
+    {
+        m_motors.pause_motors();
     }
 
 } // End class
