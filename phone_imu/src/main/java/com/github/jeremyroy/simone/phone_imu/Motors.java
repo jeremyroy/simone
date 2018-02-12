@@ -42,8 +42,20 @@ public class Motors {
         // Do something
     }
 
+    private double truncate(double val, double min, double max)
+    {
+        if (val < min)
+            val = min;
+        else if (val > max)
+            val = max;
+        return val;
+    }
+
     // Expects duty to be an int and passed as a percent
     public void setMotorDuty(int motor, double duty) {
+        // Fix if duty if out of range
+        duty = truncate(duty, 0.0, 100.0);
+
         // Map a 0-100% duty cycle range to 2-8%
         float mapped_duty = (float)(duty / 100.0 * (upper_bound - lower_bound) + lower_bound);
         mapped_duty = (float)(Math.floor(mapped_duty * Math.pow(10, resolution)) / Math.pow(10, resolution));
@@ -66,9 +78,15 @@ public class Motors {
         }
     }
 
-    public void pause_motors() {
-        audio.stop();
+    public void start_motors() {
+        audio.start();
+    }
 
+    public void stop_motors() {
+        audio.stop();
+    }
+
+    public void pause_motors() {
         setMotorDuty(MOTOR_1, 0);
         setMotorDuty(MOTOR_2, 0);
         setMotorDuty(MOTOR_3, 0);
@@ -78,7 +96,6 @@ public class Motors {
     }
 
     public void resume_motors() {
-        audio.start();
         enabled = true;
     }
 

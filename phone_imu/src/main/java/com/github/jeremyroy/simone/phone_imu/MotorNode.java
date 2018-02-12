@@ -26,7 +26,7 @@ public class MotorNode extends AbstractNodeMain
     private Motors m_motors;
 
     public MotorNode(AudioManager am) {
-        this(am, "motor_node", "enable_motors");
+        this(am, "motor_ctrl", "enable_motors");
     }
 
     public MotorNode(AudioManager am, String topic, String motor_service) {
@@ -51,6 +51,11 @@ public class MotorNode extends AbstractNodeMain
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
+
+        // Start motors
+        m_motors.start_motors();
+
+        // Set up motor command subscriber
         Subscriber<simone_msgs.MotorCTRL> subscriber =
                 connectedNode.newSubscriber(this.topic_name, simone_msgs.MotorCTRL._TYPE);
         subscriber.addMessageListener(new MessageListener<simone_msgs.MotorCTRL>() {
@@ -65,6 +70,7 @@ public class MotorNode extends AbstractNodeMain
             }
         });
 
+        // Set up motor command
         ServiceServer<EnableMotorsRequest, EnableMotorsResponse> server =
                 connectedNode.newServiceServer(this.motor_service_name, EnableMotors._TYPE,
                         new ServiceResponseBuilder<EnableMotorsRequest, EnableMotorsResponse>() {
@@ -89,7 +95,7 @@ public class MotorNode extends AbstractNodeMain
     @Override
     public void onShutdown(Node node)
     {
-        m_motors.pause_motors();
+        m_motors.stop_motors();
     }
 
 } // End class
