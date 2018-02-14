@@ -25,6 +25,7 @@ public class MainActivity extends RosActivity {
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         PhoneImu imu = new PhoneImu(sensorManager);
         MotorNode motor = new MotorNode(audioManager);
+        FlightController controller = new FlightController();
 
         // At this point, the user has already been prompted to either enter the URI
         // of a master to use or to start a master locally.
@@ -35,5 +36,6 @@ public class MainActivity extends RosActivity {
         nodeConfiguration.setMasterUri(getMasterUri());
         nodeMainExecutor.execute(imu, nodeConfiguration);
         nodeMainExecutor.execute(motor, nodeConfiguration);
+        nodeMainExecutor.execute(controller, nodeConfiguration);
     }
 }
