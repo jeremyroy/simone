@@ -46,7 +46,7 @@ public class FlightController extends AbstractNodeMain
     private AttitudeController m_att_controller;
 
     public FlightController() {
-        this("phone_imu", "command/thrust", "command/yawrate", "command/attitude", 
+        this("phone_imu", "command/thrust", "command/yawrate", "command/attitude_adjusted",
            "motor_ctrl", "update_pids");
     }
 
@@ -188,7 +188,7 @@ public class FlightController extends AbstractNodeMain
         thrust_subscriber.addMessageListener(new MessageListener<hector_uav_msgs.ThrustCommand>() {
             @Override
             public void onNewMessage(hector_uav_msgs.ThrustCommand message){
-                m_thrust = 40 - (message.getThrust() * 2);
+                m_thrust = 60 - (message.getThrust() * 3);
             }
         });
 
@@ -218,8 +218,8 @@ public class FlightController extends AbstractNodeMain
             @Override
             public void onNewMessage(hector_uav_msgs.AttitudeCommand message){
                 // Get commanded value
-                m_roll = message.getRoll() * 1.5;
-                m_pitch = message.getPitch() * 1.5;
+                m_roll = message.getRoll();
+                m_pitch = message.getPitch();
 
                 // Build control inputs from current state
                 Vect3F commanded_values = new Vect3F(m_pitch, m_roll, m_yaw); // formatted as phone's x, y, z axis

@@ -65,7 +65,7 @@ public class MotorNode extends AbstractNodeMain
                     m_motors.setMotorDuty(Motors.MOTOR_1, message.getM1());
                     m_motors.setMotorDuty(Motors.MOTOR_2, message.getM2());
                     m_motors.setMotorDuty(Motors.MOTOR_3, message.getM3());
-                    m_motors.setMotorDuty(Motors.MOTOR_4, message.getM4());
+                    m_motors.setMotorDuty(Motors.MOTOR_4, message.getM4() + 2.0); // Plus two to account for different ESC
                 }
             }
         });
