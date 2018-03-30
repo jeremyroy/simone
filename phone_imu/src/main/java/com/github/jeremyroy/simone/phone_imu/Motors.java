@@ -3,6 +3,7 @@ package com.github.jeremyroy.simone.phone_imu;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.widget.TextView;
 
 // Motors API for Jeremy
 public class Motors {
@@ -26,7 +27,10 @@ public class Motors {
 
     private boolean enabled;
 
-    public Motors(int sampleRate) {
+    private TextView textViewOut;
+    private boolean time_logged = false;
+
+    public Motors(int sampleRate, TextView textViewOut) {
         this.sampleRate = sampleRate;
         audio = new Audio();
 
@@ -36,6 +40,7 @@ public class Motors {
         setMotorDuty(MOTOR_4, 0);
 
         enabled = false;
+        this.textViewOut = textViewOut;
     }
 
     public void initializeESCs() {
@@ -63,6 +68,16 @@ public class Motors {
         switch (motor) {
             case MOTOR_1:
                 duty0 = mapped_duty;
+                if (duty > 50 && time_logged == false)
+                {
+                    time_logged = true;
+                    textViewOut.post(new Runnable() {
+                        public void run() {
+                            long time = System.currentTimeMillis();
+                            textViewOut.setText(Long.toString(time));
+                        }
+                    });
+                }
                 break;
             case MOTOR_2:
                 duty1 = mapped_duty;

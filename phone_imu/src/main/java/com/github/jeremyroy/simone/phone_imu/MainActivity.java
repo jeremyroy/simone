@@ -3,6 +3,8 @@ package com.github.jeremyroy.simone.phone_imu;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.content.Context;
+import android.os.Bundle;
+import android.widget.TextView;
 
 import org.ros.android.RosActivity;
 import org.ros.node.NodeConfiguration;
@@ -13,10 +15,24 @@ import org.ros.node.NodeMainExecutor;
  */
 public class MainActivity extends RosActivity {
 
+    private TextView textViewIn;
+    private TextView textViewOut;
+
     public MainActivity() {
         // The RosActivity constructor configures the notification title and ticker
         // messages.
         super("Phone IMU", "Phone IMU");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        long time = System.currentTimeMillis();
+        textViewIn = (TextView) findViewById(R.id.textTimeIn);
+        textViewOut = (TextView) findViewById(R.id.textTimeOut);
     }
 
     @Override
@@ -24,8 +40,8 @@ public class MainActivity extends RosActivity {
         SensorManager sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         PhoneImu imu = new PhoneImu(sensorManager);
-        MotorNode motor = new MotorNode(audioManager);
-        FlightController controller = new FlightController();
+        MotorNode motor = new MotorNode(audioManager, textViewOut);
+        FlightController controller = new FlightController(textViewIn);//getApplicationContext());
 
         // At this point, the user has already been prompted to either enter the URI
         // of a master to use or to start a master locally.

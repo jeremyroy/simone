@@ -1,6 +1,7 @@
 package com.github.jeremyroy.simone.phone_imu;
 
 import android.media.AudioManager;
+import android.widget.TextView;
 
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
@@ -25,11 +26,11 @@ public class MotorNode extends AbstractNodeMain
 
     private Motors m_motors;
 
-    public MotorNode(AudioManager am) {
-        this(am, "motor_ctrl", "enable_motors");
+    public MotorNode(AudioManager am, TextView textViewOut) {
+        this(am, "motor_ctrl", "enable_motors", textViewOut);
     }
 
-    public MotorNode(AudioManager am, String topic, String motor_service) {
+    public MotorNode(AudioManager am, String topic, String motor_service, TextView textViewOut) {
         /* Set up topic */
         this.topic_name = topic;
         this.motor_service_name = motor_service;
@@ -41,7 +42,7 @@ public class MotorNode extends AbstractNodeMain
         int sampleRate = Integer.parseInt(sampleRateStr);
 
         // Initialize motor object
-        m_motors = new Motors(sampleRate);
+        m_motors = new Motors(sampleRate, textViewOut);
     }
 
     @Override

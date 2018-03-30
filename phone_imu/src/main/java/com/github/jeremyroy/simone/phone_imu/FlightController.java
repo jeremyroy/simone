@@ -1,5 +1,9 @@
 package com.github.jeremyroy.simone.phone_imu;
 
+import android.app.Activity;
+import android.content.Context;
+import android.widget.TextView;
+
 import java.lang.Math;
 
 import org.ros.namespace.GraphName;
@@ -27,6 +31,9 @@ public class FlightController extends AbstractNodeMain
 {
     Publisher<simone_msgs.MotorCTRL> m_motor_publisher;
 
+    private TextView textViewIn;
+    private boolean time_logged = false;
+
     // Topics
     private String m_imu_topic;
     private String m_thrust_topic;
@@ -45,13 +52,13 @@ public class FlightController extends AbstractNodeMain
     private RateController m_rate_controller;
     private AttitudeController m_att_controller;
 
-    public FlightController() {
+    public FlightController(TextView textViewIn) {
         this("phone_imu", "command/thrust", "command/yawrate", "command/attitude_adjusted",
-           "motor_ctrl", "update_pids");
+           "motor_ctrl", "update_pids", textViewIn);
     }
 
     public FlightController(String imu_topic, String thrust_topic, String yawrate_topic, 
-        String attitude_topic, String motor_ctrl_topic, String pid_service) {
+        String attitude_topic, String motor_ctrl_topic, String pid_service, TextView textViewIn) {
             /* Save topic names */
             this.m_imu_topic = imu_topic;
             this.m_thrust_topic = thrust_topic;
@@ -62,8 +69,8 @@ public class FlightController extends AbstractNodeMain
 
             /* Initialize the rate and attitude controllers */
             // Set default controller gains
-            Vect3F roll_rate_pid_terms = new Vect3F(0.7, 0.0, 0.0);
-            Vect3F pitch_rate_pid_terms = new Vect3F(0.7, 0.0, 0.0);
+            Vect3F roll_rate_pid_terms = new Vect3F(5.0, 0.0, 0.0);
+            Vect3F pitch_rate_pid_terms = new Vect3F(5.0, 0.0, 0.0);
             Vect3F yaw_rate_pid_terms = new Vect3F(2.5, 0.0, 0.0);
             Vect3F roll_att_pid_terms = new Vect3F(4.5, 0.0, 0.0);
             Vect3F pitch_att_pid_terms = new Vect3F(4.5, 0.0, 0.0);
@@ -73,6 +80,8 @@ public class FlightController extends AbstractNodeMain
                     pitch_rate_pid_terms, yaw_rate_pid_terms);
             m_att_controller = new AttitudeController(roll_att_pid_terms,
                     pitch_att_pid_terms);
+
+            this.textViewIn = textViewIn;
     }
 
     private double truncate(double value, double low, double high)
@@ -220,6 +229,17 @@ public class FlightController extends AbstractNodeMain
                 // Get commanded value
                 m_roll = message.getRoll();
                 m_pitch = message.getPitch();
+
+                // Log time received
+                if ((m_roll >= 0.785398185253) && (time_logged == false)) {
+                    time_logged = true;
+                    textViewIn.post(new Runnable() {
+                        public void run() {
+                            long time = System.currentTimeMillis();
+                            textViewIn.setText(Long.toString(time));
+                        }
+                    });
+                }
 
                 // Build control inputs from current state
                 Vect3F commanded_values = new Vect3F(m_pitch, m_roll, m_yaw); // formatted as phone's x, y, z axis
